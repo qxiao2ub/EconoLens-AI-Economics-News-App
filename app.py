@@ -12,6 +12,8 @@ from dataclasses import asdict
 import pandas as pd
 import streamlit as st
 
+from usage_tracker import record_visit
+
 from econolens_core import (
     ADVISOR_NAME,
     APP_NAME,
@@ -59,10 +61,16 @@ def get_pipeline() -> EconomicsNewsPipeline:
 
 pipeline = get_pipeline()
 
+# Record one use per Streamlit browser session. Streamlit reruns the script
+# for widget interactions, so session_state prevents double-counting.
+if "usage_recorded" not in st.session_state:
+    st.session_state.usage_recorded = True
+    st.session_state.usage_total, st.session_state.usage_backend = record_visit(st.secrets)
+
 st.markdown(
     """
     <style>
-    .block-container {padding-top: 2.2rem; padding-bottom: 3rem;}
+    .block-container {padding-top: 5.2rem; padding-bottom: 3rem; max-width: 1400px;}
     .econolens-credit {
         border: 1px solid rgba(49, 51, 63, 0.18);
         border-radius: 0.75rem;
@@ -76,7 +84,7 @@ st.markdown(
         font-size: 0.78rem;
         font-weight: 700;
         opacity: 0.72;
-        margin-bottom: -0.25rem;
+        margin-top: 0.35rem; margin-bottom: 0.1rem;
     }
     </style>
     """,
@@ -86,11 +94,16 @@ st.markdown(
 st.markdown('<div class="econolens-kicker">AI ECONOMICS EDUCATION</div>', unsafe_allow_html=True)
 st.title(APP_NAME)
 st.caption(APP_TAGLINE)
-st.markdown(
-    f'<div class="econolens-credit"><strong>Author:</strong> {STUDENT_NAME}'
-    f'&nbsp;&nbsp;|&nbsp;&nbsp;<strong>Advisor:</strong> {ADVISOR_NAME}</div>',
-    unsafe_allow_html=True,
-)
+usage_col1, usage_col2 = st.columns([5, 1])
+with usage_col1:
+    st.markdown(
+        f'<div class="econolens-credit"><strong>Author:</strong> {STUDENT_NAME}'
+        f'&nbsp;&nbsp;|&nbsp;&nbsp;<strong>Advisor:</strong> {ADVISOR_NAME}</div>',
+        unsafe_allow_html=True,
+    )
+with usage_col2:
+    st.metric("App uses", f"{st.session_state.usage_total:,}")
+st.caption(f"Usage counter records one use per new Streamlit session. Backend: {st.session_state.usage_backend}.")
 st.markdown(
     "Turn a difficult economics article into a layered explanation, a grounded story, "
     "and possible everyday-life impacts. The app is an educational prototype, not financial advice."

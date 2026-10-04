@@ -31,6 +31,9 @@ EconoLens AI converts a long, terminology-heavy economics article into a layered
 |-- requirements-neural.txt        # Optional FLAN-T5 dependencies
 |-- LICENSE                        # MIT License
 |-- AUTHORS.md                     # Author and advisor credits
+|-- usage_tracker.py               # Per-session usage counter
+|-- supabase_schema.sql             # Persistent Supabase counter setup
+|-- .streamlit/secrets.toml.example # Streamlit secrets template
 |-- notebooks/
 |   `-- Rishabh_Shah_EconoLens_AI_Colab.ipynb
 |-- tests/
@@ -116,3 +119,18 @@ python -m unittest discover -s tests -v
 ## License
 
 This project is released under the MIT License. See [LICENSE](LICENSE).
+
+## App usage counter
+
+The Streamlit app records one usage event per new Streamlit browser session and displays the running total near the top of the page.
+
+For a persistent total across Streamlit Community Cloud restarts/redeployments, use the included Supabase backend:
+
+1. Create a free Supabase project.
+2. Open the Supabase SQL Editor and run `supabase_schema.sql`.
+3. In Streamlit Community Cloud, open the app settings and add the values from `.streamlit/secrets.toml.example` as `SUPABASE_URL` and `SUPABASE_KEY`.
+4. Restart the app. The displayed counter will then use Supabase for the persistent total.
+
+Without Supabase credentials, the app uses a local JSON fallback for development. That fallback is not guaranteed to persist on Streamlit Community Cloud because the cloud runtime filesystem can be ephemeral.
+
+The counter measures app sessions/uses, not verified unique individuals. A single person can generate more than one use across separate browser sessions or devices.
